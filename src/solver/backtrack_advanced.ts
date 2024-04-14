@@ -16,7 +16,8 @@ import {
   get_neighbours,
   verify_galaxy_symbol,
   verify_lotus_symbol,
-  Color
+  Color,
+  verify_and_update_ri_viewpoint_symbol
 } from '.';
 import { isValid, naive_next_cell } from './backtrack';
 
@@ -35,7 +36,7 @@ interface DartRI {
   affected_cells: Pos[];
 }
 
-interface ViewpointRI {
+export interface ViewpointRI {
   symbol: ViewpointSymbol;
   affected_cells: Pos[];
 }
@@ -80,36 +81,13 @@ export function solveAdvanced(game: Game): boolean {
         y += dirY;
       }
     }
-    // TODO: Build this in a more efficient way
-    // TODO: Also stop when an opposite color is in the way
-    if (symbol.kind == 'viewpoint') {
-      const ri: ViewpointRI = { symbol, affected_cells: [symbol.pos] };
-      riList.push(ri);
 
-      for (let x = symbol.pos.x - 1; x >= 0; x--) {
-        if (symbol.pos.x - x > symbol.count) break;
-        if (game.board[x][symbol.pos.y] != Cell.Empty) continue;
-        ri.affected_cells.push({ x, y: symbol.pos.y });
-      }
-      for (let x = symbol.pos.x + 1; x < game.sizeX; x++) {
-        if (x - symbol.pos.x > symbol.count) break;
-        if (game.board[x][symbol.pos.y] != Cell.Empty) continue;
-        ri.affected_cells.push({ x, y: symbol.pos.y });
-      }
-      for (let y = symbol.pos.y - 1; y >= 0; y--) {
-        if (symbol.pos.y - y > symbol.count) break;
-        if (game.board[symbol.pos.x][y] != Cell.Empty) continue;
-        ri.affected_cells.push({ x: symbol.pos.x, y });
-      }
-      for (let y = symbol.pos.y + 1; y < game.sizeY; y++) {
-        if (y - symbol.pos.y > symbol.count) break;
-        if (game.board[symbol.pos.x][y] != Cell.Empty) continue;
-        ri.affected_cells.push({ x: symbol.pos.x, y });
-      }
+    if (symbol.kind == 'viewpoint') {
+      let result = verify_and_update_ri_viewpoint_symbol(game.board, symbol);
+      if (!result) return false;
+      riList.push({ symbol, affected_cells: result });
     }
   }
-
-  console.log(riList);
 
   return backtrack(game, riList);
 }
@@ -157,25 +135,46 @@ function next_cell(game: Game, lookup: (RI[] | null)[][]): Pos | null {
   return naive_next_cell(game.board);
 }
 
-export function isValidAdvanced(game: Game, lookup: (RI[] | null)[][], placed: Pos, placedColor: Color): boolean {
+export function isValidAdvanced(
+  game: Game,
+  lookup: (RI[] | null)[][],
+  placed: Pos,
+  placedColor: Color
+): [boolean, [RI, Pos[]][]] {
+  // We save all the changes made into this variable, so that we can reverse the changes if it backtracks
+  let originalRIs: [RI, Pos[]][] = [];
+
   if (lookup[placed.x][placed.y]) {
     for (const ri of lookup[placed.x][placed.y]!) {
-      if (ri.symbol.kind == 'dart' && !verify_dart_symbol(game.board, ri.symbol)) return false;
-      if (ri.symbol.kind == 'viewpoint' && !verify_viewpoint_symbol(game.board, ri.symbol)) return false;
+      if (ri.symbol.kind == 'dart' && !verify_dart_symbol(game.board, ri.symbol)) return [false, originalRIs];
+      if (ri.symbol.kind == 'viewpoint') {
+        let affected_cells = verify_and_update_ri_viewpoint_symbol(game.board, ri.symbol);
+        if (!affected_cells) return [false, originalRIs];
+
+        originalRIs.push([ri, ri.affected_cells]);
+        ri.affected_cells = affected_cells;
+      }
     }
   }
 
   for (const symbol of game.symbols) {
-    if (symbol.kind == 'area' && !verify_area_symbol(game.board, symbol)) return false;
-    if (symbol.kind == 'galaxy' && !verify_galaxy_symbol(game.board, symbol)) return false;
-    if (symbol.kind == 'lotus' && !verify_lotus_symbol(game.board, symbol)) return false;
+    if (symbol.kind == 'area' && !verify_area_symbol(game.board, symbol)) return [false, originalRIs];
+    if (symbol.kind == 'galaxy' && !verify_galaxy_symbol(game.board, symbol)) return [false, originalRIs];
+    if (symbol.kind == 'lotus' && !verify_lotus_symbol(game.board, symbol)) return [false, originalRIs];
   }
 
   for (const rule of game.rules) {
-    if (rule.kind == 'connected' && rule.color != placedColor && !verify_connected_rule(game.board, rule)) return false;
+    if (rule.kind == 'connected' && rule.color != placedColor && !verify_connected_rule(game.board, rule))
+      return [false, originalRIs];
   }
 
-  return true;
+  return [true, originalRIs];
+}
+
+function reverseRiChange(originalRIs: [RI, Pos[]][]) {
+  for (const [ri, affected_cells] of originalRIs) {
+    ri.affected_cells = affected_cells;
+  }
 }
 
 export function backtrack(game: Game, riList: RI[]): boolean {
@@ -186,11 +185,26 @@ export function backtrack(game: Game, riList: RI[]): boolean {
   if (!pos) return true;
 
   // TODO: Use a better method to determine the order
-  game.board[pos.x][pos.y] = Cell.White;
-  if (isValidAdvanced(game, lookup, pos, Color.White) && backtrack(game, riList)) return true;
 
-  game.board[pos.x][pos.y] = Cell.Black;
-  if (isValidAdvanced(game, lookup, pos, Color.Black) && backtrack(game, riList)) return true;
+  {
+    game.board[pos.x][pos.y] = Cell.White;
+    let result = isValidAdvanced(game, lookup, pos, Color.White);
+    if (result[0] && backtrack(game, riList)) {
+      return true;
+    } else {
+      reverseRiChange(result[1]);
+    }
+  }
+
+  {
+    game.board[pos.x][pos.y] = Cell.Black;
+    let result = isValidAdvanced(game, lookup, pos, Color.Black);
+    if (result[0] && backtrack(game, riList)) {
+      return true;
+    } else {
+      reverseRiChange(result[1]);
+    }
+  }
 
   // If both fail, returns to initial state
   game.board[pos.x][pos.y] = Cell.Empty;

@@ -1,3 +1,5 @@
+import { ViewpointRI } from './backtrack_advanced';
+
 export enum Cell {
   Empty = 0,
   White,
@@ -507,4 +509,110 @@ export function verify_lotus_symbol(board: Board, symbol: LotusSymbol): boolean 
   }
 
   return true;
+}
+
+// Check if viewpoint symbol placed at pos have enough same cells at four cardinal directions
+// + Update ri
+export function verify_and_update_ri_viewpoint_symbol(board: Board, symbol: ViewpointSymbol): Pos[] | false {
+  const pos = symbol.pos;
+  const cell = board[pos.x][pos.y];
+
+  if (cell == Cell.Empty) return [symbol.pos];
+
+  let affected_cells: Pos[] = [];
+
+  let usableCells = 1;
+  let sameCells = 1;
+
+  let connected = true;
+  for (let x = pos.x - 1; x >= 0; x--) {
+    if (
+      connected &&
+      ((cell == Cell.Black && board[x][pos.y] == Cell.Black) || (cell == Cell.White && board[x][pos.y] == Cell.White))
+    ) {
+      sameCells += 1;
+      if (sameCells > symbol.count) return false;
+    } else {
+      if (connected && board[x][pos.y] == Cell.Empty) affected_cells.push({ x, y: pos.y });
+      connected = false;
+    }
+
+    if (
+      (cell == Cell.Black && board[x][pos.y] == Cell.White) ||
+      (cell == Cell.White && board[x][pos.y] == Cell.Black)
+    ) {
+      break;
+    }
+    usableCells += 1;
+  }
+
+  connected = true;
+  for (let x = pos.x + 1; x < board.length; x++) {
+    if (
+      connected &&
+      ((cell == Cell.Black && board[x][pos.y] == Cell.Black) || (cell == Cell.White && board[x][pos.y] == Cell.White))
+    ) {
+      sameCells += 1;
+      if (sameCells > symbol.count) return false;
+    } else {
+      if (connected && board[x][pos.y] == Cell.Empty) affected_cells.push({ x, y: pos.y });
+      connected = false;
+    }
+
+    if (
+      (cell == Cell.Black && board[x][pos.y] == Cell.White) ||
+      (cell == Cell.White && board[x][pos.y] == Cell.Black)
+    ) {
+      break;
+    }
+    usableCells += 1;
+  }
+
+  connected = true;
+  for (let y = pos.y - 1; y >= 0; y--) {
+    if (
+      connected &&
+      ((cell == Cell.Black && board[pos.x][y] == Cell.Black) || (cell == Cell.White && board[pos.x][y] == Cell.White))
+    ) {
+      sameCells += 1;
+      if (sameCells > symbol.count) return false;
+    } else {
+      if (connected && board[pos.x][y] == Cell.Empty) affected_cells.push({ x: pos.x, y });
+      connected = false;
+    }
+
+    if (
+      (cell == Cell.Black && board[pos.x][y] == Cell.White) ||
+      (cell == Cell.White && board[pos.x][y] == Cell.Black)
+    ) {
+      break;
+    }
+    usableCells += 1;
+  }
+
+  connected = true;
+  for (let y = pos.y + 1; y < board[0].length; y++) {
+    if (
+      connected &&
+      ((cell == Cell.Black && board[pos.x][y] == Cell.Black) || (cell == Cell.White && board[pos.x][y] == Cell.White))
+    ) {
+      sameCells += 1;
+      if (sameCells > symbol.count) return false;
+    } else {
+      if (connected && board[pos.x][y] == Cell.Empty) affected_cells.push({ x: pos.x, y });
+      connected = false;
+    }
+
+    if (
+      (cell == Cell.Black && board[pos.x][y] == Cell.White) ||
+      (cell == Cell.White && board[pos.x][y] == Cell.Black)
+    ) {
+      break;
+    }
+    usableCells += 1;
+  }
+
+  if (usableCells < symbol.count) return false;
+
+  return affected_cells;
 }
