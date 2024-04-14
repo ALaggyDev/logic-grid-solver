@@ -5,3 +5,10 @@ canvas {
 button {
   margin: 5px;
 }
+
+.input-box {
+  position: absolute;
+  border: 1px solid #ccc;
+  background-color: white;
+  padding: 5px;
+}
