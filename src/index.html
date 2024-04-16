@@ -9,24 +9,69 @@
     <script src="./index.ts" defer></script>
   </head>
   <body>
-    <h2>This is a solver!</h2>
+    <h2>This is a logic grid solver for Islands of Insight!</h2>
 
     <div>
-      <label for="size-x">Board Size (X):</label>
-      <input type="number" id="size-x" min="1" value="10" />
-      <label for="size-y">Board Size (Y):</label>
-      <input type="number" id="size-y" min="1" value="10" />
-      <button id="resize-button">Resize Board</button>
+      <div>
+        <label for="size-x">Board Size (X):</label>
+        <input type="number" id="size-x" min="1" value="10" />
 
-      <button id="reset-button">Reset Board</button>
+        <label for="size-y">Board Size (Y):</label>
+        <input type="number" id="size-y" min="1" value="10" />
 
-      <button id="mode-switch">Mode: Cell</button>
+        <button id="reset-button">Reset Board</button>
+      </div>
 
-      <button id="export">Export</button>
+      <div>
+        <input type="file" id="import-input" />
+        <button type="button" id="import-button">Import</button>
 
-      <button id="solve-button">Solve!</button>
+        <button id="export-button">Export</button>
+
+        <select id="preset-select">
+          <option value="none">Preset None</option>
+          <option value="1">Preset 1</option>
+          <option value="2">Preset 2</option>
+          <option value="3">Preset 3</option>
+          <option value="4">Preset 4</option>
+          <option value="5">Preset 5</option>
+          <option value="6">Preset 6</option>
+        </select>
+      </div>
+
+      <div>
+        <select id="item-select">
+          <option value="cell">Cell</option>
+          <option value="area">Area</option>
+          <option value="viewpoint">Viewpoint</option>
+          <option value="galaxy">Galaxy</option>
+          <option value="dart 0">Dart ↑</option>
+          <option value="dart 1">Dart ↓</option>
+          <option value="dart 2">Dart ←</option>
+          <option value="dart 3">Dart →</option>
+          <option value="lotus 0">Lotus ↕</option>
+          <option value="lotus 1">Lotus ⤢</option>
+          <option value="lotus 2">Lotus ↔</option>
+          <option value="lotus 3">Lotus ⤡</option>
+        </select>
+
+        <select id="rule-select">
+          <option value="connected black">Connected (Black)</option>
+          <option value="connected white">Connected (White)</option>
+          <option value="area black">Area (Black)</option>
+          <option value="area white">Area (White)</option>
+        </select>
+
+        <button id="add-rule-button">Add Rule</button>
+
+        <button id="solve-button">Solve!</button>
+      </div>
+
+      <div id="bottom">
+        <canvas id="board" width="600" height="600"></canvas>
+
+        <ul id="rule-list"></ul>
+      </div>
     </div>
-
-    <canvas id="board" width="600" height="600"></canvas>
   </body>
 </html>

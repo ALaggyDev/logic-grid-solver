@@ -5,7 +5,7 @@ import {
   Pos,
   Cell,
   verify_connected_rule,
-  verify_area_symbol,
+  verify_and_update_area_symbol,
   verify_viewpoint_symbol,
   verify_dart_symbol,
   Game,
@@ -17,7 +17,10 @@ import {
   verify_galaxy_symbol,
   verify_lotus_symbol,
   Color,
-  verify_and_update_ri_viewpoint_symbol
+  verify_and_update_ri_viewpoint_symbol,
+  verify_area_rule,
+  AreaSymbol,
+  isCellColorMatch
 } from '.';
 import { isValid, naive_next_cell } from './backtrack';
 
@@ -31,6 +34,11 @@ import { isValid, naive_next_cell } from './backtrack';
 //    This is done such that selecting empty cells to search, checking validity and early checking are done in a more efficient way
 // 2. The algorithm maintains the relational info at each step.
 
+interface AreaRI {
+  symbol: AreaSymbol;
+  affected_cells: Pos[];
+}
+
 interface DartRI {
   symbol: DartSymbol;
   affected_cells: Pos[];
@@ -41,7 +49,7 @@ export interface ViewpointRI {
   affected_cells: Pos[];
 }
 
-type RI = DartRI | ViewpointRI;
+type RI = AreaRI | DartRI | ViewpointRI;
 
 // // Handle letter
 // function buildLettersInfo(game: Game): LettersInfo {
@@ -64,6 +72,12 @@ export function solveAdvanced(game: Game): boolean {
   const riList: RI[] = [];
 
   for (const symbol of game.symbols) {
+    if (symbol.kind == 'area') {
+      let result = verify_and_update_area_symbol(game.board, symbol);
+      if (!result) return false;
+      riList.push({ symbol, affected_cells: result });
+    }
+
     if (symbol.kind == 'dart') {
       const ri: DartRI = { symbol, affected_cells: [symbol.pos] };
       riList.push(ri);
@@ -146,11 +160,20 @@ export function isValidAdvanced(
 
   if (lookup[placed.x][placed.y]) {
     for (const ri of lookup[placed.x][placed.y]!) {
-      if (ri.symbol.kind == 'dart' && !verify_dart_symbol(game.board, ri.symbol)) return [false, originalRIs];
-      if (ri.symbol.kind == 'viewpoint') {
-        let affected_cells = verify_and_update_ri_viewpoint_symbol(game.board, ri.symbol);
+      if (ri.symbol.kind == 'area') {
+        const affected_cells = verify_and_update_area_symbol(game.board, ri.symbol);
         if (!affected_cells) return [false, originalRIs];
 
+        // Save affected cells
+        originalRIs.push([ri, ri.affected_cells]);
+        ri.affected_cells = affected_cells;
+      }
+      if (ri.symbol.kind == 'dart' && !verify_dart_symbol(game.board, ri.symbol)) return [false, originalRIs];
+      if (ri.symbol.kind == 'viewpoint') {
+        const affected_cells = verify_and_update_ri_viewpoint_symbol(game.board, ri.symbol);
+        if (!affected_cells) return [false, originalRIs];
+
+        // Save affected cells
         originalRIs.push([ri, ri.affected_cells]);
         ri.affected_cells = affected_cells;
       }
@@ -158,14 +181,26 @@ export function isValidAdvanced(
   }
 
   for (const symbol of game.symbols) {
-    if (symbol.kind == 'area' && !verify_area_symbol(game.board, symbol)) return [false, originalRIs];
+    // Opposite color case
+    // Placing a cell can potentially invalidate an area symbol even if the cell is not on affected cells
+    if (symbol.kind == 'area') {
+      const symbolCell = game.board[symbol.pos.x][symbol.pos.y];
+      if (
+        symbolCell == Cell.Empty ||
+        isCellColorMatch(symbolCell, placedColor) ||
+        lookup[placed.x][placed.y]?.find(ri => ri.symbol == symbol)
+      )
+        continue;
+
+      if (!verify_and_update_area_symbol(game.board, symbol)) return [false, originalRIs];
+    }
     if (symbol.kind == 'galaxy' && !verify_galaxy_symbol(game.board, symbol)) return [false, originalRIs];
     if (symbol.kind == 'lotus' && !verify_lotus_symbol(game.board, symbol)) return [false, originalRIs];
   }
 
   for (const rule of game.rules) {
-    if (rule.kind == 'connected' && rule.color != placedColor && !verify_connected_rule(game.board, rule))
-      return [false, originalRIs];
+    if (rule.kind == 'connected' && !verify_connected_rule(game.board, rule)) return [false, originalRIs];
+    if (rule.kind == 'area' && !verify_area_rule(game.board, rule)) return [false, originalRIs];
   }
 
   return [true, originalRIs];

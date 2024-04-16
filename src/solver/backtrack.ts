@@ -5,21 +5,23 @@ import {
   Pos,
   Cell,
   verify_connected_rule,
-  verify_area_symbol,
+  verify_and_update_area_symbol,
   verify_viewpoint_symbol,
   verify_dart_symbol,
   Game,
   verify_galaxy_symbol,
-  verify_lotus_symbol
+  verify_lotus_symbol,
+  verify_area_rule
 } from '.';
 
 export function isValid(game: Game): boolean {
   for (const rule of game.rules) {
     if (rule.kind == 'connected' && !verify_connected_rule(game.board, rule)) return false;
+    if (rule.kind == 'area' && !verify_area_rule(game.board, rule)) return false;
   }
 
   for (const symbol of game.symbols) {
-    if (symbol.kind == 'area' && !verify_area_symbol(game.board, symbol)) return false;
+    if (symbol.kind == 'area' && !verify_and_update_area_symbol(game.board, symbol)) return false;
     if (symbol.kind == 'viewpoint' && !verify_viewpoint_symbol(game.board, symbol)) return false;
     if (symbol.kind == 'dart' && !verify_dart_symbol(game.board, symbol)) return false;
     if (symbol.kind == 'galaxy' && !verify_galaxy_symbol(game.board, symbol)) return false;

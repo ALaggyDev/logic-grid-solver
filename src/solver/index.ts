@@ -122,7 +122,7 @@ function oppositeColor(color: Color): Color {
   return color == Color.White ? Color.Black : Color.White;
 }
 
-function isCellColorMatch(cell: Cell, color: Color): boolean {
+export function isCellColorMatch(cell: Cell, color: Color): boolean {
   return (cell == Cell.White && color == Color.White) || (cell == Cell.Black && color == Color.Black);
 }
 
@@ -185,30 +185,42 @@ export function verify_connected_rule(board: Board, rule: ConnectedRule): boolea
   return true;
 }
 
-// Check if
-// 1. area symbol placed at pos do not have more same cells
-// 2. area symbol placed at pos have enough empty cells to expand
-export function verify_area_symbol(board: Board, symbol: AreaSymbol): boolean {
-  const pos = symbol.pos;
-  const cell = board[pos.x][pos.y];
-  const color = getCellColor(cell);
+// Return false if invalid
+export function verify_area_rule(board: Board, rule: AreaRule): boolean {
+  const lenX = board.length;
+  const lenY = board[0].length;
 
-  if (color == null) return true;
+  const visited: boolean[][] = [];
 
+  // Initialize the visited array
+  for (let x = 0; x < lenX; x++) {
+    visited[x] = [];
+    for (let y = 0; y < lenY; y++) {
+      visited[x][y] = false;
+    }
+  }
+
+  // Loop through all cells
+  for (let x = 0; x < lenX; x++) {
+    for (let y = 0; y < lenY; y++) {
+      if (visited[x][y]) continue;
+
+      if (isCellColorMatch(board[x][y], rule.color)) {
+        // Verify area
+        if (!verify_area(board, { x, y }, rule.color, rule.count, visited)) return false;
+      }
+    }
+  }
+
+  return true;
+}
+
+function verify_area(board: Board, pos: Pos, color: Color, count: number, visited: boolean[][]): Pos[] | false {
   const sameCellQueue: Pos[] = [pos];
   const usableCellQueue: Pos[] = [];
 
   let sameCellCount = 0;
   let usableCellCount = 0;
-  const visited: boolean[][] = [];
-
-  // Initialize the visited array
-  for (let x = 0; x < board.length; x++) {
-    visited[x] = [];
-    for (let y = 0; y < board[0].length; y++) {
-      visited[x][y] = false;
-    }
-  }
 
   visited[pos.x][pos.y] = true;
 
@@ -231,14 +243,16 @@ export function verify_area_symbol(board: Board, symbol: AreaSymbol): boolean {
     }
   }
 
-  if (sameCellCount > symbol.count) return false;
+  if (sameCellCount > count) return false;
+
+  const emptyNeighbours = [...usableCellQueue];
 
   // Count usable cell
   while (usableCellQueue.length > 0) {
     const curPos = usableCellQueue.pop()!;
     usableCellCount += 1;
 
-    if (sameCellCount + usableCellCount >= symbol.count) return true;
+    if (sameCellCount + usableCellCount >= count) return emptyNeighbours;
 
     for (const neighbour of get_neighbours(board, curPos)) {
       if (visited[neighbour.x][neighbour.y]) continue;
@@ -250,7 +264,30 @@ export function verify_area_symbol(board: Board, symbol: AreaSymbol): boolean {
     }
   }
 
-  return sameCellCount + usableCellCount >= symbol.count;
+  return sameCellCount + usableCellCount >= count ? emptyNeighbours : false;
+}
+
+// Check if
+// 1. area symbol placed at pos do not have more same cells
+// 2. area symbol placed at pos have enough empty cells to expand
+export function verify_and_update_area_symbol(board: Board, symbol: AreaSymbol): Pos[] | false {
+  const pos = symbol.pos;
+  const cell = board[pos.x][pos.y];
+  const color = getCellColor(cell);
+
+  if (color == null) return [symbol.pos];
+
+  const visited: boolean[][] = [];
+
+  // Initialize the visited array
+  for (let x = 0; x < board.length; x++) {
+    visited[x] = [];
+    for (let y = 0; y < board[0].length; y++) {
+      visited[x][y] = false;
+    }
+  }
+
+  return verify_area(board, pos, color, symbol.count, visited);
 }
 
 // Check if viewpoint symbol placed at pos have enough same cells at four cardinal directions

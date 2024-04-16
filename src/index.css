@@ -1,14 +1,44 @@
-canvas {
-  border: 1px solid black;
-}
-
 button {
   margin: 5px;
 }
 
-.input-box {
+#size-x,
+#size-y {
+  width: 75px;
+}
+
+#input-box {
   position: absolute;
   border: 1px solid #ccc;
   background-color: white;
   padding: 5px;
+}
+
+div#bottom {
+  display: flex;
+  flex-direction: row;
+}
+
+canvas {
+  border: 1px solid black;
+  float: left;
+}
+
+#import-input {
+  width: 200px;
+}
+
+#rule-list {
+  display: flex;
+  flex-direction: column;
+  margin-left: 75px;
+  margin-top: 0px;
+  width: 200px;
+  padding: 5px;
+  border: 1px solid black;
+}
+
+#rule-list li {
+  list-style-type: none;
+  margin: 5px;
 }
