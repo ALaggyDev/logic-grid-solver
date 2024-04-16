@@ -395,9 +395,12 @@ function handleImport(event: MouseEvent) {
 
 function handlePreset(event: Event) {
   const preset = (event.target as HTMLSelectElement).value;
-  if (preset == 'none') return;
 
-  game = JSON.parse(presets[parseInt(preset) - 1]);
+  if (preset == 'none') {
+    resetGame();
+  } else {
+    game = JSON.parse(presets[parseInt(preset) - 1]);
+  }
   drawGame(game);
   updateRuleList();
 }

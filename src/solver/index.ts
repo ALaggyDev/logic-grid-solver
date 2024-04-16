@@ -190,24 +190,24 @@ export function verify_area_rule(board: Board, rule: AreaRule): boolean {
   const lenX = board.length;
   const lenY = board[0].length;
 
-  const visited: boolean[][] = [];
+  const checked: boolean[][] = [];
 
   // Initialize the visited array
   for (let x = 0; x < lenX; x++) {
-    visited[x] = [];
+    checked[x] = [];
     for (let y = 0; y < lenY; y++) {
-      visited[x][y] = false;
+      checked[x][y] = false;
     }
   }
 
   // Loop through all cells
   for (let x = 0; x < lenX; x++) {
     for (let y = 0; y < lenY; y++) {
-      if (visited[x][y]) continue;
+      if (checked[x][y]) continue;
 
       if (isCellColorMatch(board[x][y], rule.color)) {
         // Verify area
-        if (!verify_area(board, { x, y }, rule.color, rule.count, visited)) return false;
+        if (!verify_area_complex(board, { x, y }, rule.color, rule.count, checked)) return false;
       }
     }
   }
@@ -215,7 +215,71 @@ export function verify_area_rule(board: Board, rule: AreaRule): boolean {
   return true;
 }
 
-function verify_area(board: Board, pos: Pos, color: Color, count: number, visited: boolean[][]): Pos[] | false {
+function verify_area_complex(board: Board, pos: Pos, color: Color, count: number, checked: boolean[][]): Pos[] | false {
+  const sameCellQueue: Pos[] = [pos];
+  const usableCellQueue: Pos[] = [];
+
+  let sameCellCount = 0;
+  let usableCellCount = 0;
+
+  const visited: boolean[][] = [];
+
+  // Initialize the visited array
+  for (let x = 0; x < board.length; x++) {
+    visited[x] = [];
+    for (let y = 0; y < board[0].length; y++) {
+      visited[x][y] = false;
+    }
+  }
+
+  visited[pos.x][pos.y] = true;
+  checked[pos.x][pos.y] = true;
+
+  // Count same cell
+  while (sameCellQueue.length > 0) {
+    const curPos = sameCellQueue.pop()!;
+    sameCellCount += 1;
+
+    for (const neighbour of get_neighbours(board, curPos)) {
+      if (visited[neighbour.x][neighbour.y]) continue;
+
+      if (board[neighbour.x][neighbour.y] == Cell.Empty) {
+        usableCellQueue.push(neighbour);
+        visited[neighbour.x][neighbour.y] = true;
+      } else if (isCellColorMatch(board[neighbour.x][neighbour.y], color)) {
+        sameCellQueue.push(neighbour);
+
+        visited[neighbour.x][neighbour.y] = true;
+        checked[neighbour.x][neighbour.y] = true;
+      }
+    }
+  }
+
+  if (sameCellCount > count) return false;
+
+  const emptyNeighbours = [...usableCellQueue];
+
+  // Count usable cell
+  while (usableCellQueue.length > 0) {
+    const curPos = usableCellQueue.pop()!;
+    usableCellCount += 1;
+
+    if (sameCellCount + usableCellCount >= count) return emptyNeighbours;
+
+    for (const neighbour of get_neighbours(board, curPos)) {
+      if (visited[neighbour.x][neighbour.y]) continue;
+
+      if (board[neighbour.x][neighbour.y] == Cell.Empty || isCellColorMatch(board[neighbour.x][neighbour.y], color)) {
+        usableCellQueue.push(neighbour);
+        visited[neighbour.x][neighbour.y] = true;
+      }
+    }
+  }
+
+  return sameCellCount + usableCellCount >= count ? emptyNeighbours : false;
+}
+
+function verify_area_simple(board: Board, pos: Pos, color: Color, count: number, visited: boolean[][]): Pos[] | false {
   const sameCellQueue: Pos[] = [pos];
   const usableCellQueue: Pos[] = [];
 
@@ -287,7 +351,7 @@ export function verify_and_update_area_symbol(board: Board, symbol: AreaSymbol):
     }
   }
 
-  return verify_area(board, pos, color, symbol.count, visited);
+  return verify_area_simple(board, pos, color, symbol.count, visited);
 }
 
 // Check if viewpoint symbol placed at pos have enough same cells at four cardinal directions
