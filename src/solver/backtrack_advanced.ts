@@ -222,8 +222,8 @@ export function backtrack(game: Game, riList: RI[]): boolean {
   // TODO: Use a better method to determine the order
 
   {
-    game.board[pos.x][pos.y] = Cell.White;
-    let result = isValidAdvanced(game, lookup, pos, Color.White);
+    game.board[pos.x][pos.y] = Cell.Light;
+    let result = isValidAdvanced(game, lookup, pos, Color.Light);
     if (result[0] && backtrack(game, riList)) {
       return true;
     } else {
@@ -232,8 +232,8 @@ export function backtrack(game: Game, riList: RI[]): boolean {
   }
 
   {
-    game.board[pos.x][pos.y] = Cell.Black;
-    let result = isValidAdvanced(game, lookup, pos, Color.Black);
+    game.board[pos.x][pos.y] = Cell.Dark;
+    let result = isValidAdvanced(game, lookup, pos, Color.Dark);
     if (result[0] && backtrack(game, riList)) {
       return true;
     } else {

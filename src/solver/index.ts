@@ -2,8 +2,8 @@ import { ViewpointRI } from './backtrack_advanced';
 
 export enum Cell {
   Empty = 0,
-  White,
-  Black
+  Light,
+  Dark
 }
 
 export type Board = Cell[][];
@@ -14,8 +14,8 @@ export interface Pos {
 }
 
 export enum Color {
-  White,
-  Black
+  Light,
+  Dark
 }
 
 export interface ConnectedRule {
@@ -109,21 +109,21 @@ export function get_neighbours(board: Board, pos: Pos): Pos[] {
 }
 
 function getCellColor(cell: Cell): Color | null {
-  if (cell == Cell.Black) {
-    return Color.Black;
-  } else if (cell == Cell.White) {
-    return Color.White;
+  if (cell == Cell.Dark) {
+    return Color.Dark;
+  } else if (cell == Cell.Light) {
+    return Color.Light;
   } else {
     return null;
   }
 }
 
 function oppositeColor(color: Color): Color {
-  return color == Color.White ? Color.Black : Color.White;
+  return color == Color.Light ? Color.Dark : Color.Light;
 }
 
 export function isCellColorMatch(cell: Cell, color: Color): boolean {
-  return (cell == Cell.White && color == Color.White) || (cell == Cell.Black && color == Color.Black);
+  return (cell == Cell.Light && color == Color.Light) || (cell == Cell.Dark && color == Color.Dark);
 }
 
 // Return false if invalid
@@ -368,7 +368,7 @@ export function verify_viewpoint_symbol(board: Board, symbol: ViewpointSymbol): 
   for (let x = pos.x - 1; x >= 0; x--) {
     if (
       connected &&
-      ((cell == Cell.Black && board[x][pos.y] == Cell.Black) || (cell == Cell.White && board[x][pos.y] == Cell.White))
+      ((cell == Cell.Dark && board[x][pos.y] == Cell.Dark) || (cell == Cell.Light && board[x][pos.y] == Cell.Light))
     ) {
       sameCells += 1;
       if (sameCells > symbol.count) return false;
@@ -376,10 +376,7 @@ export function verify_viewpoint_symbol(board: Board, symbol: ViewpointSymbol): 
       connected = false;
     }
 
-    if (
-      (cell == Cell.Black && board[x][pos.y] == Cell.White) ||
-      (cell == Cell.White && board[x][pos.y] == Cell.Black)
-    ) {
+    if ((cell == Cell.Dark && board[x][pos.y] == Cell.Light) || (cell == Cell.Light && board[x][pos.y] == Cell.Dark)) {
       break;
     }
     usableCells += 1;
@@ -389,7 +386,7 @@ export function verify_viewpoint_symbol(board: Board, symbol: ViewpointSymbol): 
   for (let x = pos.x + 1; x < board.length; x++) {
     if (
       connected &&
-      ((cell == Cell.Black && board[x][pos.y] == Cell.Black) || (cell == Cell.White && board[x][pos.y] == Cell.White))
+      ((cell == Cell.Dark && board[x][pos.y] == Cell.Dark) || (cell == Cell.Light && board[x][pos.y] == Cell.Light))
     ) {
       sameCells += 1;
       if (sameCells > symbol.count) return false;
@@ -397,10 +394,7 @@ export function verify_viewpoint_symbol(board: Board, symbol: ViewpointSymbol): 
       connected = false;
     }
 
-    if (
-      (cell == Cell.Black && board[x][pos.y] == Cell.White) ||
-      (cell == Cell.White && board[x][pos.y] == Cell.Black)
-    ) {
+    if ((cell == Cell.Dark && board[x][pos.y] == Cell.Light) || (cell == Cell.Light && board[x][pos.y] == Cell.Dark)) {
       break;
     }
     usableCells += 1;
@@ -410,7 +404,7 @@ export function verify_viewpoint_symbol(board: Board, symbol: ViewpointSymbol): 
   for (let y = pos.y - 1; y >= 0; y--) {
     if (
       connected &&
-      ((cell == Cell.Black && board[pos.x][y] == Cell.Black) || (cell == Cell.White && board[pos.x][y] == Cell.White))
+      ((cell == Cell.Dark && board[pos.x][y] == Cell.Dark) || (cell == Cell.Light && board[pos.x][y] == Cell.Light))
     ) {
       sameCells += 1;
       if (sameCells > symbol.count) return false;
@@ -418,10 +412,7 @@ export function verify_viewpoint_symbol(board: Board, symbol: ViewpointSymbol): 
       connected = false;
     }
 
-    if (
-      (cell == Cell.Black && board[pos.x][y] == Cell.White) ||
-      (cell == Cell.White && board[pos.x][y] == Cell.Black)
-    ) {
+    if ((cell == Cell.Dark && board[pos.x][y] == Cell.Light) || (cell == Cell.Light && board[pos.x][y] == Cell.Dark)) {
       break;
     }
     usableCells += 1;
@@ -431,7 +422,7 @@ export function verify_viewpoint_symbol(board: Board, symbol: ViewpointSymbol): 
   for (let y = pos.y + 1; y < board[0].length; y++) {
     if (
       connected &&
-      ((cell == Cell.Black && board[pos.x][y] == Cell.Black) || (cell == Cell.White && board[pos.x][y] == Cell.White))
+      ((cell == Cell.Dark && board[pos.x][y] == Cell.Dark) || (cell == Cell.Light && board[pos.x][y] == Cell.Light))
     ) {
       sameCells += 1;
       if (sameCells > symbol.count) return false;
@@ -439,10 +430,7 @@ export function verify_viewpoint_symbol(board: Board, symbol: ViewpointSymbol): 
       connected = false;
     }
 
-    if (
-      (cell == Cell.Black && board[pos.x][y] == Cell.White) ||
-      (cell == Cell.White && board[pos.x][y] == Cell.Black)
-    ) {
+    if ((cell == Cell.Dark && board[pos.x][y] == Cell.Light) || (cell == Cell.Light && board[pos.x][y] == Cell.Dark)) {
       break;
     }
     usableCells += 1;
@@ -481,7 +469,7 @@ export function verify_dart_symbol(board: Board, symbol: DartSymbol): boolean {
 
   while (x >= 0 && x < board.length && y >= 0 && y < board[0].length) {
     // Opposite Cell
-    if ((cell == Cell.Black && board[x][y] == Cell.White) || (cell == Cell.White && board[x][y] == Cell.Black)) {
+    if ((cell == Cell.Dark && board[x][y] == Cell.Light) || (cell == Cell.Light && board[x][y] == Cell.Dark)) {
       oppositeCells += 1;
       if (oppositeCells > symbol.count) return false;
     }
@@ -629,7 +617,7 @@ export function verify_and_update_ri_viewpoint_symbol(board: Board, symbol: View
   for (let x = pos.x - 1; x >= 0; x--) {
     if (
       connected &&
-      ((cell == Cell.Black && board[x][pos.y] == Cell.Black) || (cell == Cell.White && board[x][pos.y] == Cell.White))
+      ((cell == Cell.Dark && board[x][pos.y] == Cell.Dark) || (cell == Cell.Light && board[x][pos.y] == Cell.Light))
     ) {
       sameCells += 1;
       if (sameCells > symbol.count) return false;
@@ -638,10 +626,7 @@ export function verify_and_update_ri_viewpoint_symbol(board: Board, symbol: View
       connected = false;
     }
 
-    if (
-      (cell == Cell.Black && board[x][pos.y] == Cell.White) ||
-      (cell == Cell.White && board[x][pos.y] == Cell.Black)
-    ) {
+    if ((cell == Cell.Dark && board[x][pos.y] == Cell.Light) || (cell == Cell.Light && board[x][pos.y] == Cell.Dark)) {
       break;
     }
     usableCells += 1;
@@ -651,7 +636,7 @@ export function verify_and_update_ri_viewpoint_symbol(board: Board, symbol: View
   for (let x = pos.x + 1; x < board.length; x++) {
     if (
       connected &&
-      ((cell == Cell.Black && board[x][pos.y] == Cell.Black) || (cell == Cell.White && board[x][pos.y] == Cell.White))
+      ((cell == Cell.Dark && board[x][pos.y] == Cell.Dark) || (cell == Cell.Light && board[x][pos.y] == Cell.Light))
     ) {
       sameCells += 1;
       if (sameCells > symbol.count) return false;
@@ -660,10 +645,7 @@ export function verify_and_update_ri_viewpoint_symbol(board: Board, symbol: View
       connected = false;
     }
 
-    if (
-      (cell == Cell.Black && board[x][pos.y] == Cell.White) ||
-      (cell == Cell.White && board[x][pos.y] == Cell.Black)
-    ) {
+    if ((cell == Cell.Dark && board[x][pos.y] == Cell.Light) || (cell == Cell.Light && board[x][pos.y] == Cell.Dark)) {
       break;
     }
     usableCells += 1;
@@ -673,7 +655,7 @@ export function verify_and_update_ri_viewpoint_symbol(board: Board, symbol: View
   for (let y = pos.y - 1; y >= 0; y--) {
     if (
       connected &&
-      ((cell == Cell.Black && board[pos.x][y] == Cell.Black) || (cell == Cell.White && board[pos.x][y] == Cell.White))
+      ((cell == Cell.Dark && board[pos.x][y] == Cell.Dark) || (cell == Cell.Light && board[pos.x][y] == Cell.Light))
     ) {
       sameCells += 1;
       if (sameCells > symbol.count) return false;
@@ -682,10 +664,7 @@ export function verify_and_update_ri_viewpoint_symbol(board: Board, symbol: View
       connected = false;
     }
 
-    if (
-      (cell == Cell.Black && board[pos.x][y] == Cell.White) ||
-      (cell == Cell.White && board[pos.x][y] == Cell.Black)
-    ) {
+    if ((cell == Cell.Dark && board[pos.x][y] == Cell.Light) || (cell == Cell.Light && board[pos.x][y] == Cell.Dark)) {
       break;
     }
     usableCells += 1;
@@ -695,7 +674,7 @@ export function verify_and_update_ri_viewpoint_symbol(board: Board, symbol: View
   for (let y = pos.y + 1; y < board[0].length; y++) {
     if (
       connected &&
-      ((cell == Cell.Black && board[pos.x][y] == Cell.Black) || (cell == Cell.White && board[pos.x][y] == Cell.White))
+      ((cell == Cell.Dark && board[pos.x][y] == Cell.Dark) || (cell == Cell.Light && board[pos.x][y] == Cell.Light))
     ) {
       sameCells += 1;
       if (sameCells > symbol.count) return false;
@@ -704,10 +683,7 @@ export function verify_and_update_ri_viewpoint_symbol(board: Board, symbol: View
       connected = false;
     }
 
-    if (
-      (cell == Cell.Black && board[pos.x][y] == Cell.White) ||
-      (cell == Cell.White && board[pos.x][y] == Cell.Black)
-    ) {
+    if ((cell == Cell.Dark && board[pos.x][y] == Cell.Light) || (cell == Cell.Light && board[pos.x][y] == Cell.Dark)) {
       break;
     }
     usableCells += 1;

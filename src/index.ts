@@ -39,9 +39,9 @@ function getCellColor(cell: Cell): string {
   switch (cell) {
     case Cell.Empty:
       return '#A0A0A0';
-    case Cell.White:
+    case Cell.Light:
       return '#FFFFFF';
-    case Cell.Black:
+    case Cell.Dark:
       return '#202020';
   }
 }
@@ -78,7 +78,7 @@ function drawGame(game: Game) {
     const pixelX = symbol.pos.y * pixelCellSize;
     const pixelY = symbol.pos.x * pixelCellSize;
 
-    ctx.fillStyle = game.board[symbol.pos.x][symbol.pos.y] == Cell.Black ? 'white' : 'black';
+    ctx.fillStyle = game.board[symbol.pos.x][symbol.pos.y] == Cell.Dark ? 'white' : 'black';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
@@ -147,9 +147,9 @@ function handleMouseDown(event: MouseEvent) {
   isMouseDown = true;
 
   if (event.button === 0) {
-    mouseCell = Cell.Black; // Left click
+    mouseCell = Cell.Dark; // Left click
   } else if (event.button === 2) {
-    mouseCell = Cell.White; // Right click
+    mouseCell = Cell.Light; // Right click
   } else if (event.button === 1) {
     mouseCell = Cell.Empty; // Middle click
   }
@@ -336,24 +336,22 @@ function handlePlaceSymbol(event: MouseEvent) {
 }
 
 function handleAddRule(event: MouseEvent) {
-  const list = document.getElementById('rule-list')!;
-
   const rule = (document.getElementById('rule-select')! as HTMLSelectElement).value;
-  if (rule == 'connected black') {
-    game.rules.push({ kind: 'connected', color: Color.Black });
+  if (rule == 'connected dark') {
+    game.rules.push({ kind: 'connected', color: Color.Dark });
     updateRuleList();
-  } else if (rule == 'connected white') {
-    game.rules.push({ kind: 'connected', color: Color.White });
+  } else if (rule == 'connected light') {
+    game.rules.push({ kind: 'connected', color: Color.Light });
     updateRuleList();
-  } else if (rule == 'area black' || rule == 'area white') {
+  } else if (rule == 'area dark' || rule == 'area light') {
     getInput(event, value => {
       const num = parseInt(value);
       if (isNaN(num) || num < 1) return;
 
-      if (rule == 'area black') {
-        game.rules.push({ kind: 'area', color: Color.Black, count: num });
-      } else if (rule == 'area white') {
-        game.rules.push({ kind: 'area', color: Color.White, count: num });
+      if (rule == 'area dark') {
+        game.rules.push({ kind: 'area', color: Color.Dark, count: num });
+      } else if (rule == 'area light') {
+        game.rules.push({ kind: 'area', color: Color.Light, count: num });
       }
 
       updateRuleList();
@@ -369,9 +367,9 @@ function updateRuleList() {
     const element = document.createElement('li');
 
     if (rule.kind == 'connected') {
-      element.textContent = `Connect all ${rule.color == Color.Black ? 'dark' : 'light'} cells`;
+      element.textContent = `Connect all ${rule.color == Color.Dark ? 'dark' : 'light'} cells`;
     } else if (rule.kind == 'area') {
-      element.textContent = `All ${rule.color == Color.Black ? 'dark' : 'light'} regions have area ${rule.count}`;
+      element.textContent = `All ${rule.color == Color.Dark ? 'dark' : 'light'} regions have area ${rule.count}`;
     }
 
     list.appendChild(element);

@@ -52,10 +52,10 @@ export function solve(game: Game): boolean {
   if (!pos) return true;
 
   // TODO: Use a better method to determine the order
-  game.board[pos.x][pos.y] = Cell.White;
+  game.board[pos.x][pos.y] = Cell.Light;
   if (solve(game)) return true;
 
-  game.board[pos.x][pos.y] = Cell.Black;
+  game.board[pos.x][pos.y] = Cell.Dark;
   if (solve(game)) return true;
 
   // If both fail, returns to initial state
