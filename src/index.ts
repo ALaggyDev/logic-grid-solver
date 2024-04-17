@@ -1,23 +1,6 @@
-import { presets } from './presets';
-import {
-  Board,
-  Rule,
-  Symbol,
-  Pos,
-  Cell,
-  verify_connected_rule,
-  verify_and_update_area_symbol,
-  verify_viewpoint_symbol,
-  Direction,
-  Color,
-  Game,
-  verify_galaxy_symbol,
-  GalaxySymbol,
-  verify_lotus_symbol,
-  LotusSymbol
-} from './solver';
-import { solve } from './solver/backtrack';
-import { solveAdvanced } from './solver/backtrack_advanced';
+import presets from './presets';
+import { Board, Symbol, Pos, Cell, Direction, Game } from './solver';
+import { solveAdvanced } from './solver/backtrackAdvanced';
 
 const canvas = document.getElementById('board')! as HTMLCanvasElement;
 const rect = canvas.getBoundingClientRect();
@@ -43,6 +26,8 @@ function getCellColor(cell: Cell): string {
       return '#FFFFFF';
     case Cell.Dark:
       return '#202020';
+    case Cell.Border:
+      return '#FF0000';
   }
 }
 
@@ -88,11 +73,6 @@ function drawGame(game: Game) {
       ctx.fillText(symbol.count.toString(), pixelX + pixelCellSize / 2, pixelY + pixelCellSize / 2);
     }
 
-    if (symbol.kind == 'letter') {
-      ctx.font = 'bold ' + Math.floor(pixelCellSize / 2) + 'px Arial';
-      ctx.fillText(String.fromCharCode(symbol.letter + 65), pixelX + pixelCellSize / 2, pixelY + pixelCellSize / 2);
-    }
-
     if (symbol.kind == 'lotus') {
       ctx.font = 'bold ' + Math.floor(pixelCellSize / 2) + 'px Arial';
       let text: string;
@@ -108,7 +88,7 @@ function drawGame(game: Game) {
       ctx.fillText(text!, pixelX + pixelCellSize / 2, pixelY + pixelCellSize / 2);
     }
 
-    if (symbol.kind != 'area' && symbol.kind != 'letter') {
+    if (symbol.kind != 'area') {
       ctx.font = Math.floor(pixelCellSize / 4) + 'px Arial';
 
       let text = symbol.kind;
@@ -131,7 +111,7 @@ function drawGame(game: Game) {
 
 // Function to handle cell color change on mouse move
 function handleMouseMove(event: MouseEvent) {
-  if (getMode() != 'cell') return;
+  if (getMode() != 'cell' && getMode() != 'border') return;
   if (!isMouseDown) return;
 
   const pos = getMouseCellPos(event);
@@ -143,15 +123,24 @@ function handleMouseMove(event: MouseEvent) {
 
 // Function to handle cell color change on mouse down
 function handleMouseDown(event: MouseEvent) {
-  if (getMode() != 'cell') return;
+  if (getMode() != 'cell' && getMode() != 'border') return;
+
   isMouseDown = true;
 
-  if (event.button === 0) {
-    mouseCell = Cell.Dark; // Left click
-  } else if (event.button === 2) {
-    mouseCell = Cell.Light; // Right click
-  } else if (event.button === 1) {
-    mouseCell = Cell.Empty; // Middle click
+  if (getMode() == 'border') {
+    if (event.button == 0) {
+      mouseCell = Cell.Border;
+    } else if (event.button == 2) {
+      mouseCell = Cell.Empty;
+    }
+  } else {
+    if (event.button == 0) {
+      mouseCell = Cell.Dark; // Left click
+    } else if (event.button == 2) {
+      mouseCell = Cell.Light; // Right click
+    } else if (event.button == 1) {
+      mouseCell = Cell.Empty; // Middle click
+    }
   }
 
   const pos = getMouseCellPos(event);
@@ -163,7 +152,7 @@ function handleMouseDown(event: MouseEvent) {
 
 // Function to handle cell color change on mouse up
 function handleMouseUp() {
-  if (getMode() != 'cell') return;
+  if (getMode() != 'cell' && getMode() != 'border') return;
   isMouseDown = false;
 }
 
@@ -220,8 +209,10 @@ function solveBoard() {
   console.log('Solving the game...');
 
   console.time();
-  console.log(solveAdvanced(game));
+  const success = solveAdvanced(game);
   console.timeEnd();
+
+  if (!success) alert('No valid solutions found!');
 
   drawGame(game);
 }
@@ -256,7 +247,7 @@ function getInput(event: MouseEvent, out: (value: string) => void) {
 
 function handlePlaceSymbol(event: MouseEvent) {
   const mode = getMode();
-  if (mode == 'cell') return;
+  if (mode == 'cell' || mode == 'border') return;
 
   const pos = getMouseCellPos(event);
   if (!pos) return;
@@ -338,10 +329,10 @@ function handlePlaceSymbol(event: MouseEvent) {
 function handleAddRule(event: MouseEvent) {
   const rule = (document.getElementById('rule-select')! as HTMLSelectElement).value;
   if (rule == 'connected dark') {
-    game.rules.push({ kind: 'connected', color: Color.Dark });
+    game.rules.push({ kind: 'connected', color: Cell.Dark });
     updateRuleList();
   } else if (rule == 'connected light') {
-    game.rules.push({ kind: 'connected', color: Color.Light });
+    game.rules.push({ kind: 'connected', color: Cell.Light });
     updateRuleList();
   } else if (rule == 'area dark' || rule == 'area light') {
     getInput(event, value => {
@@ -349,14 +340,19 @@ function handleAddRule(event: MouseEvent) {
       if (isNaN(num) || num < 1) return;
 
       if (rule == 'area dark') {
-        game.rules.push({ kind: 'area', color: Color.Dark, count: num });
+        game.rules.push({ kind: 'area', color: Cell.Dark, count: num });
       } else if (rule == 'area light') {
-        game.rules.push({ kind: 'area', color: Color.Light, count: num });
+        game.rules.push({ kind: 'area', color: Cell.Light, count: num });
       }
 
       updateRuleList();
     });
   }
+}
+
+function handleClearRules() {
+  game.rules = [];
+  updateRuleList();
 }
 
 function updateRuleList() {
@@ -367,9 +363,9 @@ function updateRuleList() {
     const element = document.createElement('li');
 
     if (rule.kind == 'connected') {
-      element.textContent = `Connect all ${rule.color == Color.Dark ? 'dark' : 'light'} cells`;
+      element.textContent = `Connect all ${rule.color == Cell.Dark ? 'dark' : 'light'} cells`;
     } else if (rule.kind == 'area') {
-      element.textContent = `All ${rule.color == Color.Dark ? 'dark' : 'light'} regions have area ${rule.count}`;
+      element.textContent = `All ${rule.color == Cell.Dark ? 'dark' : 'light'} regions have area ${rule.count}`;
     }
 
     list.appendChild(element);
@@ -377,18 +373,19 @@ function updateRuleList() {
 }
 
 function handleImport(event: MouseEvent) {
-  event.preventDefault();
+  getInput(event, value => {
+    if (value == '') return;
 
-  const file = (document.getElementById('import-input')! as HTMLInputElement).files![0];
-  if (!file) return;
+    try {
+      game = JSON.parse(value);
 
-  const reader = new FileReader();
-  reader.onload = event => {
-    const text = event.target!.result as string;
-    game = JSON.parse(text);
-    drawGame(game);
-  };
-  reader.readAsText(file);
+      drawGame(game);
+      updateRuleList();
+    } catch (err) {
+      console.error(err);
+      alert('Import failed! See console for more details.');
+    }
+  });
 }
 
 function handlePreset(event: Event) {
@@ -416,6 +413,7 @@ canvas.addEventListener('contextmenu', event => event.preventDefault());
 
 document.getElementById('reset-button')!.addEventListener('click', resetGame);
 document.getElementById('add-rule-button')!.addEventListener('click', handleAddRule);
+document.getElementById('clear-rules-button')!.addEventListener('click', handleClearRules);
 document.getElementById('preset-select')!.addEventListener('change', handlePreset);
 document.getElementById('import-button')!.addEventListener('click', handleImport);
 document.getElementById('export-button')!.addEventListener('click', handleExport);
