@@ -27,7 +27,7 @@ function getCellColor(cell: Cell): string {
     case Cell.Dark:
       return '#202020';
     case Cell.Border:
-      return '#FF0000';
+      return '#404040';
   }
 }
 
@@ -406,7 +406,7 @@ function handleExport() {
   alert('Game has been printed to the console.\nPress Ctrl+Shift+I to view it.');
 }
 
-window.addEventListener('mousedown', handleMouseDown);
+canvas.addEventListener('mousedown', handleMouseDown);
 window.addEventListener('mouseup', handleMouseUp);
 canvas.addEventListener('mousemove', handleMouseMove);
 canvas.addEventListener('contextmenu', event => event.preventDefault());

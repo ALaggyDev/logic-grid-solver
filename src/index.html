@@ -3,13 +3,67 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Solver</title>
+    <title>Logic Grid Solver</title>
 
     <link rel="stylesheet" href="./index.css" />
-    <script src="./index.ts" defer></script>
+    <script type="module" src="./index.ts" defer></script>
   </head>
   <body>
-    <h2>This is a logic grid solver for Islands of Insight!</h2>
+    <div class="title-outer">
+      <span class="title">Logic grid solver in Islands of Insight!</span>
+      <a class="link" onclick="document.getElementById('info-box').classList.remove('hidden')">[Info]</a>
+      <a class="link" href="https://alaggydev.github.io/logic-grid-solver">[Github]</a>
+    </div>
+
+    <div id="info-box" class="hidden">
+      <div id="info-close-button" onclick="document.getElementById('info-box').classList.add('hidden')">X</div>
+
+      <div class="info-scollable">
+        <h2>Info</h2>
+
+        <p>
+          This is a solver for solving logic grids in Islands of insight
+          <strong>automatically in the browser</strong>!
+        </p>
+
+        <h3>Controls:</h3>
+        <ol>
+          <li>
+            "Cell" mode - left click to place dark cell, right click to place light cell, middle click to clear cell.
+          </li>
+          <li>"Border" mode - left click to place border cell, right click to clear cell.</li>
+          <li>"Symbol" mode - left click to place a symbol, right click to remove symbol.</li>
+        </ol>
+
+        <h3>
+          Only a subset of the game's mechanics are currently implemented. More will be implemented in the future.
+        </h3>
+
+        <p>Implemented rules: Connected, Area</p>
+        <p>Implemented symbols: Area, Dart, Viewpoint, Galaxy, Lotus</p>
+
+        <h3>What is this?</h3>
+        <p>
+          This is a project to solve logic grids in Islands of Insight <strong>automatically by a computer</strong>. I
+          created this project just for fun, and also to practice coding solvers (and see how far I can go). Obviously
+          it is way more fun to solve logic grids yourself, but pushing the limits of solving puzzles automatically is
+          also pretty fun.
+        </p>
+
+        <h3>How does this solve logic grids?</h3>
+        <p>
+          This solver uses a technique called backtracking. Essentially, the solver recursively guesses cells, and
+          backtrack if the guesses are wrong. The process continues until a solution have been found. Some heuristics
+          (e.g. Most Constrained Variable) are also implemented on certain rules & symbols to speed up the process.
+        </p>
+
+        <h3>Why is this website so ugly?</h3>
+        <p>I did not try to make this website looks good.</p>
+
+        <h3>Why are the input ui so bad?</h3>
+        <p>:(</p>
+      </div>
+    </div>
 
     <div>
       <div>
@@ -35,11 +89,14 @@
           <option value="4">Preset 4</option>
           <option value="5">Preset 5</option>
           <option value="6">Preset 6</option>
-          <option value="7">Preset 7 (TOO COMPLEX)</option>
+          <option value="7">Preset 7</option>
+          <option value="8">Preset 8 (TOO COMPLEX)</option>
         </select>
       </div>
 
       <div>
+        <label>Mode: </label>
+
         <select id="item-select">
           <option value="cell">Cell</option>
           <option value="border">Border</option>
@@ -55,6 +112,8 @@
           <option value="lotus 2">Lotus ↔</option>
           <option value="lotus 3">Lotus ⤡</option>
         </select>
+
+        <label>Rule: </label>
 
         <select id="rule-select">
           <option value="connected dark">Connected (Dark)</option>
